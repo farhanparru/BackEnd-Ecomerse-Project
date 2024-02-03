@@ -109,8 +109,9 @@ module.exports={
             price,
             image,
             category,
-         });
-         console.log(price);
+         }); 
+
+         
          
          res.status(201).json({
           status : "success",
@@ -123,7 +124,7 @@ module.exports={
       //->view all the products by category
       allProducts: async (req,res)=>{
          const prods = await productSchema.find()
-         console.log(prods); 
+        //  console.log(prods,"prrrrr"); 
            if(!prods){
              return(
                res.status(404),
@@ -190,13 +191,13 @@ module.exports={
 
          updateProduct: async (req,res)=>{
           const {value,error} = joiProductSchema.validate(req.body);
-          console.log(value);
+          console.log(req.body,"hshj");
 
           if(error){
              return res.status(401).send({message:error.details[0].message})
           }
           const {id,title,description,price,image,category}=value
-          
+         
 
           const product = await  productSchema.find()
            console.log(product);
@@ -216,9 +217,9 @@ module.exports={
               category,
             }
           );
-
+                 
           res
-          .status(201)
+          .status(200)
           .json({status:"Success",message:"Product success fully update"})
 
 

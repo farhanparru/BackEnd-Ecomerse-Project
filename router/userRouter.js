@@ -12,9 +12,11 @@ router
 // .use(verifyToken)
 .get("/products",tryCatchMiddleware(userController.viewProduct))
 .get("/products:id",tryCatchMiddleware(userController.productById))
-.get("/products/category/:categoryname",tryCatchMiddleware(userController.productsByCatogery))
+.get("/products/category:categoryname",tryCatchMiddleware(userController.productsByCatogery))
 
 .post("/:id/cart",tryCatchMiddleware(userController.addToCart))
 .get("/:id/cart",tryCatchMiddleware(userController.viewCartProduct))
-
+.post("/:id/wishlists",tryCatchMiddleware(userController.addToWishlist))
+.get("/:id/wishlists",tryCatchMiddleware(userController.showWishlist))
+.delete("/:id/wishlists",tryCatchMiddleware(userController.deleteWishlist))
 module.exports = router

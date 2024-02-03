@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
    }
 })
 
-console.log(storage,"hsjd");
+// console.log(storage,"hsjd");
 
 const upload= multer ({storage})
 
@@ -35,20 +35,19 @@ const imageUpload = (req,res,next)=>{
             folder:"Ecomers-imgs"
          })
          
-         // console.log(result);
+         console.log(result);
         
            req.body.image = result.secure_url
 
-         fs.unlink(req.file.path,(unliker)=>{
-            if(unliker){
-               console.log("Error deleting local file",unliker);
+         fs.unlink(req.file.path,(error)=>{
+            if(error){
+               console.log("Error deleting local file",error,"qqqqqqqqqqqqqqqq");
             }
          })
 
          next()
       }
       catch (error){
-         console.log(process.env. CLOUDINARY_NAME);
          return res.status(500).json({message:"Error uploading file to Cloudinary"})
       }
    })
