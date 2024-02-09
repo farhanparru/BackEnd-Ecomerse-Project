@@ -76,31 +76,7 @@ module.exports={
       //->Create Product
 
       creatProduct: async (req, res) => {
-        // console.log(req.body);  
-
-        // const { value, error } = joiProductSchema.validate(req.body);
-        // const { title, description, price, image, category } = value;
-        // console.log(value);
-        // if (error) {
-        //   return res.status(404).json({ error: error.details[0].message });
-        //   //    return res.send(error.message)
-        // } else {
-        //   await products.create({
-        //     title,
-        //     description,
-        //     price,
-        //     image,
-        //     category,
-        //   });
-    
-        //   res.status(201).json({
-        //     status: "success",
-        //     message: "Successfully Created products .",
-        //     data: products,
-        //   });
-        // }
-
-       
+        console.log(req.body);  
           const {title,description,price,image,category} = req.body ;
               //  console.log(req.body);
           const data = await productSchema.create ({
@@ -124,7 +100,7 @@ module.exports={
       //->view all the products by category
       allProducts: async (req,res)=>{
          const prods = await productSchema.find()
-        //  console.log(prods,"prrrrr"); 
+         
            if(!prods){
              return(
                res.status(404),
@@ -173,7 +149,7 @@ module.exports={
           }
 
           const deleteProduct = await productSchema.findOneAndDelete({_id:productId})
-          // console.log(deleteProduct);
+         
           if(!deleteProduct){
               return res.status(404).json({
                 status:"failure",
@@ -189,42 +165,90 @@ module.exports={
 
          //-> Admin Update Producte
 
-         updateProduct: async (req,res)=>{
-          const {value,error} = joiProductSchema.validate(req.body);
-          console.log(req.body,"hshj");
+        //  updateProduct: async (req,res)=>{
+        //   console.log(req.body)
+        //   // const prdt = productSchema.findById(req.params.id)
+        //   // const {value,error } = joiProductSchema.validate(req.body);
+        //   // console.log("value",value);
 
-          if(error){
-             return res.status(401).send({message:error.details[0].message})
-          }
-          const {id,title,description,price,image,category}=value
+        //   // if(error){
+        //   //    return res.status(401).send({message:error.details[0].message})
+        //   // }
+        //   const {id,title,discription,price,image,category}=req.body
+        //   // console.log("value",value);
+          
+           
+        //   const product = await  productSchema.find()
+          
+        //   if(!product){
+        //     return res
+        //     .send(404)
+        //     .json({status:"Failer",message:"Producte not found in database"})
+        //   }
+
+        //   await productSchema.findByIdAndUpdate(
+        //     {_id: id},
+        //     {
+        //       title,
+        //       discription,
+        //       price,
+        //       image,
+        //       category,
+        //     }
+        //   );
+             
+        //   res
+        //   .status(200)
+        //   .json({status:"Success",message:"Product success fully update"})
+        //  }
+        updateProduct: async (req, res) => {
+          const id = req.params.id
+          
          
-
-          const product = await  productSchema.find()
-           console.log(product);
-          if(!product){
+        // if(!mongoose.Types.ObjectId.isValid(req.body.id)){
+        //   res.status(400).json("id is not valid")
+        // }
+          const { title, description, price, image, category } = req.body; 
+          console.log(req.body,'hhh');
+          // if(!title){
+          //   res.status(400).json("title is required")  
+          // }
+        
+          const product = await productSchema.find();
+        
+          if (!product) { 
             return res
-            .send(404)
-            .json({status:"Failer",message:"Producte not found in database"})
+              .status(404)
+              .json({ status: "Failure", message: "Product not found in the database" });
           }
-
-          await productSchema.findByIdAndUpdate(
-            {_id:id},
-            {
-              title,
-              description,
-              price,
-              image,
-              category,
-            }
-          );
-                 
-          res
-          .status(200)
-          .json({status:"Success",message:"Product success fully update"})
-
-
-      }
-
+        
+          try {
+            console.log("worikng")
+            await productSchema.findByIdAndUpdate(
+              { _id: id },
+              {
+                title,
+                description,
+                price,
+                image,
+                category,
+              }
+            );
+        
+            res
+              .status(200)
+              .json({ status: "Success", message: "Product successfully updated" });
+          } catch (error) {
+            console.error("Error updating product:", error);
+            res.status(500).json({
+              status: "Failure",
+              message: "Internal server error",
+              error_message: error.message,
+            });
+          }
+        }
+        
+      
     }
-
+ 
       

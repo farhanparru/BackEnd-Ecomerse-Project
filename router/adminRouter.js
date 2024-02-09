@@ -13,7 +13,7 @@ router
 
 // apk middleware  start
 
-// .use(verifyToken)
+.use(verifyToken)
 
 // apk middleware  end
 
@@ -22,9 +22,9 @@ router
 .get("/user/:id",tryCatchMiddleware(admin.useById))
 .post("/products",imageUpload, tryCatchMiddleware(admin.creatProduct))
 .get("/products",tryCatchMiddleware(admin.allProducts))
-.get("/products:id",tryCatchMiddleware(admin.productsById))
+.get("/products/:id",tryCatchMiddleware(admin.productsById))
 .delete("/products",tryCatchMiddleware(admin.delteProduct))
-.put("/products",tryCatchMiddleware(admin.updateProduct))
+.put("/products:id",tryCatchMiddleware(admin.updateProduct))
 
 
 module.exports = router 

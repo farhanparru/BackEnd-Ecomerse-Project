@@ -1,20 +1,21 @@
 //Schmea imported
 const User = require("../models/UserSchema")
 const product = require("../models/productSchema")
+const Order = require('../models/orderSchema')
 const { joiUserSchema } = require("../models/validationSchema")
 const bcrypt=require("bcrypt")
 const jwt = require("jsonwebtoken") //Json Web Token Security puropsse
 const {default:mongoose}= require("mongoose") //ES6 Module syntex default Commmon js 
 const {json} = require('body-parser')
-
-
+const  stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+let sValue = []
 
 
  
 module.exports ={
     //->new User Register
     userSignup:async(req,res)=>{
-        console.log(req.body);
+       
         const {value,error} = joiUserSchema.validate(req.body)
         const {name,email,username,password}=req.body;
         if(error){
@@ -45,10 +46,13 @@ module.exports ={
             
         }
 
-        const {username,password} = value   
+        const {username,password} = value 
+          
         const user = await User.findOne({
+         
              username : username,   
           })
+          console.log(user);
        
           
            if(!user){
@@ -57,20 +61,14 @@ module.exports ={
                 message:"User not fount 🧐"
             })
           }
-        
-         
-
           if(!password || !user.password){
               return res  
               .status(401)
               .json({error: "errore",message:"Invalid Input"})
              
           }
-  
-           
-
-
             const passwordCheck = await bcrypt.compare(password,user.password); 
+            console.log(passwordCheck);
             if(!passwordCheck){
              
                 return res
@@ -300,6 +298,83 @@ module.exports ={
                               //It proceeds to update the user document in the database, using $pull to remove the specified product ID from the wishlist array.
                              await User.updateOne({_id:userId},{$pull:{wishlist:productId}})
                              res.status(200).json({status:"Successfully removed from wishlist"})
-                        }
+                        },
 
-              }  
+                          //-> Payments
+                      payment: async (req,res)=>{
+                          const userId = req.params.id;
+                          const user = await User.findOne({_id:userId}).populate('cart')
+
+                          if(!user){
+                               return res.status(404).json({message: "User Note Found"})
+                          }
+                              const cartProducts = user.cart;
+                               if(cartProducts.lenght === 0){
+                                 return res
+                                 .status(200)
+                                 .json({status:"Success",message:"User Cart Is Emty",data:[]})
+                               }      
+                                 
+                               const lineItems =  cartProducts.map((item)=>{
+                                    return {
+                                      price_data:{
+                                      currency:"inr",
+                                      product_data:{
+                                      name: item.title,
+                                      description:item.description
+                                      },
+                                      unit_amount:Math.round(item.price * 100)
+                                      },
+                                      quantity: 1,
+                                    };
+                                 }) ;
+
+                                 session = await stripe.checkout.create({
+
+                                 })
+                           } ,
+
+                        
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        //-> Order Deteials
+                       orderDetails:async (req,res)=>{
+                          const userId = req.params.id;
+                          //method is used to automatically replace the orders field in the user document with actual order documents
+                          const user = await User.findById(userId).populate('orders')
+
+                          if(!user){
+                             return res.status(404).json({
+                               status: 'Failure',
+                               message:'User Note Found'
+                             })
+                          }
+                          const ordProduucts = user.orders;
+
+                          if(ordProduucts.lenght === 0){
+                              return res.status(200).json({
+                                 message: "You don't have any product orders",
+                                 data:[],
+                              })
+                          }
+
+                          const orderWithProducts = await Order.find({_id:{$in: ordProduucts}})
+                          .populate('products')
+
+                          res.status(200).json({
+                             message:"Ordered Products Details Found",
+                             data:orderWithProducts,
+                       })
+                      }
+                  }  
