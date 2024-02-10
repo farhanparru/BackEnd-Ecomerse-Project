@@ -300,7 +300,7 @@ module.exports ={
                              res.status(200).json({status:"Successfully removed from wishlist"})
                         },
 
-                          //-> Payments
+                          //-> Payments user purchase
                       payment: async (req,res)=>{
                           const userId = req.params.id;
                           const user = await User.findOne({_id:userId}).populate('cart')
@@ -328,13 +328,61 @@ module.exports ={
                                       quantity: 1,
                                     };
                                  }) ;
-
+                                //Creating Payment Session with Stripe:
                                  session = await stripe.checkout.create({
+                                    payment_method_types:['cards'],
+                                    line_items: lineItems,
+                                    mode:"payment",
+                                    success_url:``,
+                                    cancel_url:``
 
+                                 });
+
+                                 if(!session){
+                                   return res.json({
+                                     status:"Failure",
+                                     message:"Error occured on session side",
+                                   })
+                                 }
+                                  //sValue is an object used to store relevant information about the payment session and the user initiating the payment(Storing Session Data in sValue)
+                                 sValue ={
+                                   userId,
+                                   user,
+                                   session,
+                                 };
+
+                                 res.status(200).json({
+                                   status:"Success",
+                                   message:"Stripe payment session created",
+                                   url:session.url,
                                  })
-                           } ,
+                            } ,
+                           
+                            success: async (req,res)=>{
+                                const{id,user,session} = sValue;
+                                //user's unique identifier.
+                                const userId = user.id
+                                const cartItems = user.cart;
+                              //Oder Create
+                                const orders = await Order.create({
+                                   userId: id,
+                                   products:cartItems.map(
+                                    (value) => new mongoose.Types.ObjectId(value._id)
+                                   ),
+                                   order_id:session.id,
+                                   //Generates a unique payment_id for the order. It concatenates the string "demo" with the current timestamp
+                                   payment_id:`demo ${Date.now()}`,
+                                   //Calculates the total_amount of the order. It divides the amount_total
+                                   total_amount:session.amount_total/100,
+                                });
 
-                        
+                                if(!orders){
+                                    return res.json({message:"error occured whil inputing to orderDB"})
+                                }
+
+                                const orderId = orders._id;
+                            },
+                             
 
 
 
