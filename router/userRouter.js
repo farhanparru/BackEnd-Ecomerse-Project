@@ -18,6 +18,11 @@ router
 .get("/:id/cart",tryCatchMiddleware(userController.viewCartProduct))
 .post("/:id/wishlists",tryCatchMiddleware(userController.addToWishlist))
 .get("/:id/wishlists",tryCatchMiddleware(userController.showWishlist))
-.delete("/:id/wishlists",tryCatchMiddleware(userController.deleteWishlist))
+.delete("/:id/wishlists",tryCatchMiddleware(userController.deleteWishlist)
+)
+.post("/:id/payment",tryCatchMiddleware(userController.payment))
+.get("/payment/success",tryCatchMiddleware(userController.success))
+.post("/payment/cansel",tryCatchMiddleware(userController.Cancel))
 .get("/:id/orders",tryCatchMiddleware(userController.orderDetails))
+
 module.exports = router

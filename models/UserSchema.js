@@ -7,8 +7,9 @@ const userSchema = new mongoose.Schema({
       username:String,
       password:String,
 
-   cart:[{type: mongoose.Schema.ObjectId,ref:"products"}],
-   wishlist:[{type:mongoose.Schema.ObjectId,ref:"products"}]
+   cart:[{type: mongoose.Schema.ObjectId,ref:"Product"}],
+   wishlist:[{type:mongoose.Schema.ObjectId,ref:"Product"}],
+   orders:[]
 })
 
 // password encrpusiton this a security purposse

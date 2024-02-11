@@ -7,7 +7,8 @@ const bcrypt=require("bcrypt")
 const jwt = require("jsonwebtoken") //Json Web Token Security puropsse
 const {default:mongoose}= require("mongoose") //ES6 Module syntex default Commmon js 
 const {json} = require('body-parser')
-const  stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const  stripe = require("stripe")(process.env. STRIPE_SECRET_KEY);
+console.log(process.env.STRIPE_SECRET_KEY,"hhs");
 let sValue = []
 
 
@@ -303,19 +304,24 @@ module.exports ={
                           //-> Payments user purchase
                       payment: async (req,res)=>{
                           const userId = req.params.id;
-                          const user = await User.findOne({_id:userId}).populate('cart')
-
+                          // Finding the user with the given ID and populating their cart items
+                          const user = await User.findOne({_id: userId}).populate('cart')
+                          
+                          
                           if(!user){
                                return res.status(404).json({message: "User Note Found"})
                           }
+                          // Extracting cart items from the user object
                               const cartProducts = user.cart;
+                             // If the user's cart is empty, return success with an empty array
                                if(cartProducts.lenght === 0){
                                  return res
                                  .status(200)
                                  .json({status:"Success",message:"User Cart Is Emty",data:[]})
                                }      
-                                 
-                               const lineItems =  cartProducts.map((item)=>{
+                                 // Mapping cart items to line items required for Stripe payment session
+                               const  lineItems =  cartProducts.map((item)=>{
+                               
                                     return {
                                       price_data:{
                                       currency:"inr",
@@ -328,15 +334,18 @@ module.exports ={
                                       quantity: 1,
                                     };
                                  }) ;
-                                //Creating Payment Session with Stripe:
-                                 session = await stripe.checkout.create({
-                                    payment_method_types:['cards'],
+                               
+                              // Creating Payment Session with Stripe using line items
+                                const  session = await stripe.checkout.sessions.create({
+                           
+                                    payment_method_types:['card'],
                                     line_items: lineItems,
-                                    mode:"payment",
-                                    success_url:``,
-                                    cancel_url:``
+                                    mode: "payment",
+                                    success_url:`http://localhost:3000/api/users/payment/success`,//Replace with your success URL
+                                    cancel_url:"http://localhost:3000/api/users/payment/cancel"//replace with your cancel url
 
                                  });
+                                 console.log(session,"sio");
 
                                  if(!session){
                                    return res.json({
@@ -350,6 +359,7 @@ module.exports ={
                                    user,
                                    session,
                                  };
+                                //  console.log(sValue,"si");
 
                                  res.status(200).json({
                                    status:"Success",
@@ -359,42 +369,65 @@ module.exports ={
                             } ,
                            
                             success: async (req,res)=>{
+                             
+                               // Destructuring values from the stored session data (sValue)
                                 const{id,user,session} = sValue;
-                                //user's unique identifier.
-                                const userId = user.id
+                                       console.log(sValue);
+                                // Extracting the user's unique identifier
+                                const  userId = user._id;
+                               
+                                  // Extracting the cart items from the user object
                                 const cartItems = user.cart;
-                              //Oder Create
+                                  // Creating an order using the cart items and session details
                                 const orders = await Order.create({
                                    userId: id,
                                    products:cartItems.map(
                                     (value) => new mongoose.Types.ObjectId(value._id)
                                    ),
                                    order_id:session.id,
-                                   //Generates a unique payment_id for the order. It concatenates the string "demo" with the current timestamp
+                                  // Generates a unique payment_id for the order by concatenating "demo" with the current timestamp
                                    payment_id:`demo ${Date.now()}`,
-                                   //Calculates the total_amount of the order. It divides the amount_total
+                             // Calculates the total amount of the order by dividing the session amount_total by 100 (assuming the amount_total is in cents)
                                    total_amount:session.amount_total/100,
                                 });
 
                                 if(!orders){
                                     return res.json({message:"error occured whil inputing to orderDB"})
                                 }
-
+                              // Updating the user document in the database
                                 const orderId = orders._id;
+                                const userUpdate = await User.updateOne(
+                                   {_id:userId},
+                                   {
+                                    $push:{orders:orderId},
+                                    $set:{cart:[]},// Clearing the cart after successful payment
+                                   },
+                                   {new:true}
+                                )
+                             // Checking if user update was successful and sending the appropriate response
+                                if(userUpdate){
+                                   res.status(200).json({
+                                     status:"Success",
+                                     message:"Payment Successfuly"
+                                   })
+                                }else{
+                                  res.status(500).json({
+                                     status:"Success",
+                                     message:"Failed to update user data"
+                                  })
+                                }
+                            },
+
+                            //-> Order Canseling
+
+
+                            Cancel:async(req,res)=>{
+                                 res.status(200).json({
+                                   status:"succes",
+                                   message:"Payment canceled"
+                                 })
                             },
                              
-
-
-
-
-
-
-
-
-
-
-
-
 
                         //-> Order Deteials
                        orderDetails:async (req,res)=>{
@@ -419,10 +452,10 @@ module.exports ={
 
                           const orderWithProducts = await Order.find({_id:{$in: ordProduucts}})
                           .populate('products')
-
+                          
                           res.status(200).json({
                              message:"Ordered Products Details Found",
                              data:orderWithProducts,
                        })
                       }
-                  }  
+                  } ;
