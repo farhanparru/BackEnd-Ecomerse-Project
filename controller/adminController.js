@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const UserSchema = require("../models/UserSchema");
 const productSchema = require("../models/productSchema");
 const { joiProductSchema } = require("../models/validationSchema");
-
+const Order = require('../models/orderSchema')
 
 module.exports={
     //->admin login
@@ -246,7 +246,25 @@ module.exports={
               error_message: error.message,
             });
           }
-        }
+        },
+
+
+        //->Admin Order deteails
+
+        orderDetials:async (req,res)=>{
+            const products = await Order.find()
+          
+            if(products.length === 0){
+                return res.status(200).json({
+                    message:"No Product",
+                });
+            }
+            res.status(200).json({
+               status:"Success",
+               message:"SuccessFuly fethed order deteails",
+               products,
+            })
+        },
         
       
     }
