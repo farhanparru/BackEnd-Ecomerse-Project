@@ -342,7 +342,7 @@ module.exports ={
                                     line_items: lineItems,
                                     mode: "payment",
                                     success_url:`http://localhost:3000/api/users/payment/success`,//Replace with your success URL
-                                    cancel_url:"http://localhost:3000/api/users/payment/cancel"//replace with your cancel url
+                                    cancel_url:"http://localhost:3000/api/users/payment/cansel"//replace with your cancel url
 
                                  });
                                  console.log(session,"sio");
@@ -361,7 +361,7 @@ module.exports ={
                                  };
                                 //  console.log(sValue,"si");
 
-                                 res.status(200).json({
+                                 res.status(200).json({    
                                    status:"Success",
                                    message:"Stripe payment session created",
                                    url:session.url,
@@ -372,7 +372,7 @@ module.exports ={
                              
                                // Destructuring values from the stored session data (sValue)
                                 const{id,user,session} = sValue;
-                                       console.log(sValue);
+                                    
                                 // Extracting the user's unique identifier
                                 const  userId = user._id;
                                
@@ -380,16 +380,21 @@ module.exports ={
                                 const cartItems = user.cart;
                                   // Creating an order using the cart items and session details
                                 const orders = await Order.create({
+                                 
                                    userId: id,
                                    products:cartItems.map(
                                     (value) => new mongoose.Types.ObjectId(value._id)
                                    ),
+                                   
                                    order_id:session.id,
                                   // Generates a unique payment_id for the order by concatenating "demo" with the current timestamp
-                                   payment_id:`demo ${Date.now()}`,
-                             // Calculates the total amount of the order by dividing the session amount_total by 100 (assuming the amount_total is in cents)
+                                  payment_id: `demo ${Date.now()}`,
+                                   // Calculates the total amount of the order by dividing the session amount_total by 100 (assuming the amount_total is in cents)
                                    total_amount:session.amount_total/100,
+
+                  
                                 });
+                                console.log(orders,"uie");
 
                                 if(!orders){
                                     return res.json({message:"error occured whil inputing to orderDB"})
@@ -399,7 +404,7 @@ module.exports ={
                                 const userUpdate = await User.updateOne(
                                    {_id:userId},
                                    {
-                                    $push:{orders:orderId},
+                                    $push:{orders:orderId}, // Orders the pushing after successful payment
                                     $set:{cart:[]},// Clearing the cart after successful payment
                                    },
                                    {new:true}
